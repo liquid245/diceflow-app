@@ -1,6 +1,7 @@
 import { selectedDice } from '../../core/selection/selection';
 import { useGame } from '../../app/game';
 import { config } from '../../config';
+import { shareRollState } from '../../services/share';
 import { InstallButton } from './InstallButton';
 
 export function ActionBar() {
@@ -11,6 +12,12 @@ export function ActionBar() {
   const label = (key: keyof typeof config.buttons) => {
     const value = config.buttons[key];
     return typeof value === 'string' ? value : value(selectedCount);
+  };
+
+  const handleShare = async () => {
+    const result = await shareRollState(state);
+    if (result === 'copied') window.alert('Roll state link copied.');
+    if (result === 'failed') window.alert('Unable to share roll state.');
   };
 
   return (
@@ -49,11 +56,8 @@ export function ActionBar() {
         )}
       </div>
       <div className="action-row action-row--share">
-        <button
-          disabled={!hasDice}
-          onClick={() => window.alert('Share Roll State is not implemented yet.')}
-        >
-          Share Roll State
+        <button disabled={!hasDice} onClick={() => void handleShare()}>
+          {label('share')}
         </button>
       </div>
       <InstallButton />
