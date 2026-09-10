@@ -2,17 +2,11 @@ import { useSyncExternalStore } from 'react';
 import { createEngine } from '../core/game/engine';
 
 function nextId(): string {
-  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
-    return crypto.randomUUID();
-  }
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') return crypto.randomUUID();
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
 }
 
-export const engine = createEngine({
-  random: Math.random,
-  nextId,
-  now: () => Date.now(),
-});
+export const engine = createEngine({ random: Math.random, nextId, now: () => Date.now() });
 
 export function useGame() {
   const state = useSyncExternalStore(engine.subscribe, engine.getState);
@@ -24,6 +18,8 @@ export function useGame() {
     beginTransaction: engine.beginTransaction,
     endTransaction: engine.endTransaction,
     getState: engine.getState,
+    exportSession: engine.exportSession,
+    restoreSession: engine.restoreSession,
     random: engine.random,
   };
 }
