@@ -6,14 +6,14 @@ import { engine } from './game';
 import { storage } from '../storage/storage';
 import { initPersistence } from '../storage/persistence';
 import { preloadSounds, probeAudio, unlockAudio } from '../services/audio';
-import { readSharedState } from '../services/share';
+import { readSharedSession } from '../services/share';
 import { config } from '../config';
 
 document.documentElement.style.setProperty('--font-scale', String(config.ui.fontScale));
 
 initPersistence(engine, storage);
-const sharedState = readSharedState();
-if (sharedState) engine.restore(sharedState);
+const sharedSession = readSharedSession();
+if (sharedSession) engine.restoreSession(sharedSession);
 preloadSounds();
 probeAudio();
 unlockAudio();
