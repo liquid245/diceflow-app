@@ -6,7 +6,7 @@ export type StatusMessageKey = 'version' | 'downloading' | 'ready' | 'muted' | '
 
 type Label = string | ((selectedCount: number) => string);
 
-const buttons: Record<'roll' | 'reroll' | 'add' | 'delete' | 'undo' | 'redo' | 'clear', Label> = {
+const buttons: Record<'roll' | 'reroll' | 'add' | 'delete' | 'undo' | 'redo' | 'clear' | 'share', Label> = {
   roll: 'Roll Selected',
   reroll: (n) => (n > 0 ? 'Reroll Selected' : 'Reroll All'),
   add: (n) => (n === 0 ? 'Add One Die' : `Add ${n} ${n === 1 ? 'Die' : 'Dice'}`),
@@ -14,6 +14,7 @@ const buttons: Record<'roll' | 'reroll' | 'add' | 'delete' | 'undo' | 'redo' | '
   undo: 'Undo',
   redo: 'Redo',
   clear: 'Clear Table',
+  share: 'Share Roll State',
 };
 
 // Поворот (x, y, z) в радианах, чтобы грань с этим значением смотрела на камеру (+Z).
