@@ -7,6 +7,12 @@ import { reduce } from './reducer';
 import type { Die } from '../dice/types';
 import { noneSelection, selectedDice } from '../selection/selection';
 
+export interface GameSession {
+  state: GameState;
+  undo: GameState[];
+  redo: GameState[];
+}
+
 export interface GameEngine {
   getState(): GameState;
   dispatch(action: Action): void;
@@ -16,6 +22,8 @@ export interface GameEngine {
   beginTransaction(): void;
   endTransaction(): void;
   restore(state: GameState): void;
+  exportSession(): GameSession;
+  restoreSession(session: GameSession): void;
   random(): number;
 }
 
@@ -29,9 +37,7 @@ export function createEngine(deps: EngineDeps, initial: GameState = createInitia
   let transactionPushed = false;
 
   function notify(): void {
-    for (const listener of listeners) {
-      listener();
-    }
+    for (const listener of listeners) listener();
   }
 
   function dispatchGame(action: GameAction): void {
@@ -60,7 +66,6 @@ export function createEngine(deps: EngineDeps, initial: GameState = createInitia
     state = reduce(state, action, deps);
     const entry = makeEntry(action, previous, state, deps);
     state = isMod ? mergeModEntry(state, entry) : appendEntry(state, entry);
-
     lastAction = action.type;
     notify();
   }
@@ -87,14 +92,23 @@ export function createEngine(deps: EngineDeps, initial: GameState = createInitia
     dispatchGame(action);
   }
 
+  function restoreSession(session: GameSession): void {
+    state = { ...normalizeState(session.state), hydrated: true };
+    undoStack.length = 0;
+    undoStack.push(...session.undo.map((snapshot) => ({ ...normalizeState(snapshot), hydrated: true })));
+    redoStack = session.redo.map((snapshot) => ({ ...normalizeState(snapshot), hydrated: true }));
+    lastAction = null;
+    inTransaction = false;
+    transactionPushed = false;
+    notify();
+  }
+
   return {
     getState: () => state,
     dispatch,
     subscribe(listener) {
       listeners.add(listener);
-      return () => {
-        listeners.delete(listener);
-      };
+      return () => listeners.delete(listener);
     },
     canUndo: () => undoStack.length > 0,
     canRedo: () => redoStack.length > 0,
@@ -115,6 +129,8 @@ export function createEngine(deps: EngineDeps, initial: GameState = createInitia
       lastAction = null;
       notify();
     },
+    exportSession: () => ({ state, undo: [...undoStack], redo: [...redoStack] }),
+    restoreSession,
     random: () => deps.random(),
   };
 }
@@ -130,12 +146,7 @@ function valueTotals(dice: Die[], values: number[]): Record<number, number> {
   return totals;
 }
 
-function makeEntry(
-  action: LoggableAction,
-  previous: GameState,
-  next: GameState,
-  deps: EngineDeps,
-): HistoryEntry {
+function makeEntry(action: LoggableAction, previous: GameState, next: GameState, deps: EngineDeps): HistoryEntry {
   const base = { id: deps.nextId(), timestamp: deps.now() };
   switch (action.type) {
     case 'roll': {
@@ -143,14 +154,7 @@ function makeEntry(
       if (affected.length === 0) return { ...base, kind: 'roll', count: 0 };
       const ids = new Set(affected.map((d) => d.id));
       const before = affected.map((d) => d.value);
-      return {
-        ...base,
-        kind: 'roll',
-        count: affected.length,
-        before,
-        totals: valueTotals(previous.dice, before),
-        after: next.dice.filter((d) => ids.has(d.id)).map((d) => d.value),
-      };
+      return { ...base, kind: 'roll', count: affected.length, before, totals: valueTotals(previous.dice, before), after: next.dice.filter((d) => ids.has(d.id)).map((d) => d.value) };
     }
     case 'reroll': {
       const selected = selectedDice(previous.dice, previous.selection);
@@ -159,49 +163,20 @@ function makeEntry(
       const ids = new Set(targets.map((d) => d.id));
       const before = targets.map((d) => d.value);
       const values = new Set(before);
-      return {
-        ...base,
-        kind: 'reroll',
-        count: targets.length,
-        value: values.size === 1 ? targets[0].value : undefined,
-        before,
-        totals: valueTotals(previous.dice, before),
-        after: next.dice.filter((d) => ids.has(d.id)).map((d) => d.value),
-      };
+      return { ...base, kind: 'reroll', count: targets.length, value: values.size === 1 ? targets[0].value : undefined, before, totals: valueTotals(previous.dice, before), after: next.dice.filter((d) => ids.has(d.id)).map((d) => d.value) };
     }
     case 'add':
-      return {
-        ...base,
-        kind: 'add',
-        count: action.count,
-        after: next.dice.slice(previous.dice.length).map((d) => d.value),
-      };
+      return { ...base, kind: 'add', count: action.count, after: next.dice.slice(previous.dice.length).map((d) => d.value) };
     case 'delete': {
       const selected = selectedDice(previous.dice, previous.selection);
-      const removed =
-        selected.length > 0
-          ? selected
-          : previous.dice.slice(-Math.min(Math.max(0, action.count ?? 1), previous.dice.length));
+      const removed = selected.length > 0 ? selected : previous.dice.slice(-Math.min(Math.max(0, action.count ?? 1), previous.dice.length));
       const before = removed.map((d) => d.value);
-      return {
-        ...base,
-        kind: 'delete',
-        count: removed.length,
-        before,
-        totals: valueTotals(previous.dice, before),
-      };
+      return { ...base, kind: 'delete', count: removed.length, before, totals: valueTotals(previous.dice, before) };
     }
     case 'move': {
       const affected = selectedDice(previous.dice, previous.selection);
       const before = affected.map((d) => d.value);
-      return {
-        ...base,
-        kind: 'move',
-        count: affected.length,
-        value: action.targetValue,
-        before,
-        totals: valueTotals(previous.dice, before),
-      };
+      return { ...base, kind: 'move', count: affected.length, value: action.targetValue, before, totals: valueTotals(previous.dice, before) };
     }
     case 'clear':
       return { ...base, kind: 'clear', count: previous.dice.length };
@@ -215,20 +190,11 @@ function appendEntry(state: GameState, entry: HistoryEntry): GameState {
 function mergeModEntry(state: GameState, entry: HistoryEntry): GameState {
   const history = state.history;
   const last = history[history.length - 1];
-  if (!last || (last.kind !== 'add' && last.kind !== 'delete')) {
-    return appendEntry(state, entry);
-  }
+  if (!last || (last.kind !== 'add' && last.kind !== 'delete')) return appendEntry(state, entry);
   const lastNet = last.kind === 'add' ? last.count : -last.count;
   const entryNet = entry.kind === 'add' ? entry.count : -entry.count;
   const net = lastNet + entryNet;
-  if (net === 0) {
-    return { ...state, history: history.slice(0, -1) };
-  }
-  const merged: HistoryEntry = {
-    id: last.id,
-    timestamp: last.timestamp,
-    kind: net > 0 ? 'add' : 'delete',
-    count: Math.abs(net),
-  };
+  if (net === 0) return { ...state, history: history.slice(0, -1) };
+  const merged: HistoryEntry = { id: last.id, timestamp: last.timestamp, kind: net > 0 ? 'add' : 'delete', count: Math.abs(net) };
   return { ...state, history: [...history.slice(0, -1), merged] };
 }
