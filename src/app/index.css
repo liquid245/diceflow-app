@@ -221,6 +221,10 @@ body {
   cursor: default;
 }
 
+.action-row--share {
+  grid-template-columns: 1fr;
+}
+
 .action-row--install {
   grid-template-columns: 1fr;
 }
