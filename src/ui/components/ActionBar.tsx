@@ -48,6 +48,14 @@ export function ActionBar() {
           </button>
         )}
       </div>
+      <div className="action-row action-row--share">
+        <button
+          disabled={!hasDice}
+          onClick={() => window.alert('Share Roll State is not implemented yet.')}
+        >
+          Share Roll State
+        </button>
+      </div>
       <InstallButton />
     </div>
   );
