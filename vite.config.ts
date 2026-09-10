@@ -8,8 +8,13 @@ const pkg = JSON.parse(
   readFileSync(fileURLToPath(new URL('./package.json', import.meta.url)), 'utf-8'),
 ) as { version: string };
 
+// Публикация идёт на два хостинга: GitHub Pages отдаёт проект из подкаталога
+// (/dice_flow/), Cloudflare Pages — с корня домена. Значение по умолчанию
+// сохраняет текущий GitHub Pages и не меняет существующий деплой.
+const base = process.env.VITE_BASE ?? '/dice_flow/';
+
 export default defineConfig({
-  base: '/dice_flow/',
+  base,
   define: {
     __APP_VERSION__: JSON.stringify(pkg.version),
   },
@@ -31,8 +36,8 @@ export default defineConfig({
         background_color: '#1a1a1a',
         display: 'standalone',
         orientation: 'portrait',
-        start_url: '/dice_flow/',
-        scope: '/dice_flow/',
+        start_url: base,
+        scope: base,
         icons: [
           {
             src: 'icons/icon-192-ring8.png',
