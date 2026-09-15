@@ -36,15 +36,6 @@ export function RendererCanvas() {
     renderer.sync(state);
   }, [state]);
 
-  useEffect(() => {
-    const duration = config.renderer.shake.durationMs;
-    if (state.selection.kind === 'none' || duration <= 0) return;
-    const timer = window.setTimeout(() => {
-      dispatch({ type: 'select', ids: [], mode: 'set' });
-    }, duration);
-    return () => window.clearTimeout(timer);
-  }, [state.selection, dispatch]);
-
   const selectedCount = selectedDice(state.dice, state.selection).length;
   useEffect(() => {
     if (selectedCount === 0) cycleRef.current.reset();
@@ -76,6 +67,16 @@ export function RendererCanvas() {
   const groupSwipe = useGroupSwipe(engine, hitTest);
   const backgroundTap = useBackgroundTap(engine, hitTest);
 
+  useEffect(() => {
+    const duration = config.renderer.shake.durationMs;
+    if (state.selection.kind === 'none' || duration <= 0) return;
+    if (drag.grabActive) return;
+    const timer = window.setTimeout(() => {
+      dispatch({ type: 'select', ids: [], mode: 'set' });
+    }, duration);
+    return () => window.clearTimeout(timer);
+  }, [state.selection, dispatch, drag.grabActive]);
+
   function mergeHandlers(
     ...handlers: Array<(event: ReactPointerEvent<HTMLDivElement>) => void>
   ): (event: ReactPointerEvent<HTMLDivElement>) => void {
@@ -94,7 +95,7 @@ export function RendererCanvas() {
   return (
     <div className="table" {...pointerHandlers}>
       <div ref={containerRef} className="table-stage" />
-      <StatusLine />
+      <StatusLine grabActive={drag.grabActive} grabDragging={drag.grabDragging} />
     </div>
   );
 }

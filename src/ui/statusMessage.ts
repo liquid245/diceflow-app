@@ -5,6 +5,7 @@ export type StatusMessageActivity = {
   ready: boolean;
   muted: boolean;
   selection: boolean;
+  grabbing: boolean;
 };
 
 // Scans messages in priority order (top = highest) and returns the first one

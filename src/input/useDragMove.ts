@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { PointerEvent as ReactPointerEvent } from 'react';
 import type { InputEngine } from './engine';
 import type { HitTest } from './hitTest';
@@ -27,6 +27,8 @@ export function useDragMove(
   const press = useRef<PressState | null>(null);
   const last = useRef({ x: 0, y: 0 });
   const timer = useRef<number | null>(null);
+  const [grabActive, setGrabActive] = useState(false);
+  const [grabDragging, setGrabDragging] = useState(false);
 
   function clearTimer() {
     if (timer.current !== null) {
@@ -52,11 +54,14 @@ export function useDragMove(
       wasSelected: gameDie ? isDieSelected(gameDie, engine.getState().selection) : false,
     };
     last.current = { x: event.clientX, y: event.clientY };
+    setGrabActive(true);
+    setGrabDragging(false);
     clearTimer();
     timer.current = window.setTimeout(() => {
       gesture.current.timerExpired();
       const d = press.current;
       if (gesture.current.isDragging() && d) {
+        setGrabDragging(true);
         if (!d.wasSelected) {
           engine.dispatch({ type: 'select', ids: [d.dieId], mode: 'set' });
         }
@@ -81,6 +86,7 @@ export function useDragMove(
       return;
     }
     if (gesture.current.isSwiping()) {
+      setGrabActive(false);
       const hover = hitTest.dieAt(event.clientX, event.clientY);
       if (hover) onSwipe?.(d.dieId, hover.id);
     }
@@ -88,6 +94,8 @@ export function useDragMove(
 
   function up(event: ReactPointerEvent<HTMLDivElement>) {
     clearTimer();
+    setGrabActive(false);
+    setGrabDragging(false);
     const d = press.current;
     if (!d) return;
     press.current = null;
@@ -118,6 +126,8 @@ export function useDragMove(
 
   function cancel() {
     clearTimer();
+    setGrabActive(false);
+    setGrabDragging(false);
     if (press.current && gesture.current.isDragging()) onDrag?.(null);
     gesture.current.cancel();
     press.current = null;
@@ -128,5 +138,7 @@ export function useDragMove(
     onPointerMove: move,
     onPointerUp: up,
     onPointerCancel: cancel,
+    grabActive,
+    grabDragging,
   };
 }

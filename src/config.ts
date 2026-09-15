@@ -1,7 +1,7 @@
 type DiceFaceRotation = [number, number, number];
 
 const base = import.meta.env.BASE_URL || '/';
-export type StatusMessageKey = 'version' | 'downloading' | 'ready' | 'muted' | 'selection';
+export type StatusMessageKey = 'version' | 'downloading' | 'ready' | 'muted' | 'selection' | 'grabbing';
 type Label = string | ((selectedCount: number) => string);
 const buttons: Record<'roll' | 'reroll' | 'add' | 'delete' | 'undo' | 'redo' | 'clear' | 'share', Label> = {
   roll: 'Roll Selected', reroll: (n) => (n > 0 ? 'Reroll Selected' : 'Reroll All'), add: (n) => (n === 0 ? 'Add One Die' : `Add ${n} ${n === 1 ? 'Die' : 'Dice'}`), delete: (n) => (n > 0 ? 'Delete Selected' : 'Delete Last'), undo: 'Undo', redo: 'Redo', clear: 'Clear Table', share: 'Share Session',
@@ -16,6 +16,6 @@ export const config = {
   storage: { saveDebounceMs: 500 }, pwa: { updateCheckIntervalMs: 10_000 },
   assets: { sounds: { appear: `${base}sounds/850097__lbrady240__pop11.wav`, roll: `${base}sounds/629982__flem0527__dice-rolling-on-table.wav`, disappear: `${base}sounds/poof.wav` }, diceModel: `${base}models/dice-2.glb`, diceFaces },
   buttons,
-  ui: { fontScale: 1, panels: { borders: false }, infoPanel: { centered: true, swipeHint: 'Swipe finger to add or reduce dices', historyRows: { portrait: 5, landscape: 5 } }, statusLine: { priority: ['downloading', 'selection', 'muted', 'ready', 'version'] as StatusMessageKey[] }, history: { verbs: { roll: 'Roll', reroll: 'Reroll', add: 'Add', delete: 'Remove', move: 'Move', clear: 'Clear' } as Record<string, string>, arrow: '→', pluralSuffix: 's', totalWord: 'Total', selectWord: 'Selected', someWord: 'some of', listSep: ', ', segmentSep: ' · ' } },
+  ui: { fontScale: 1, panels: { borders: false }, infoPanel: { centered: true, swipeHint: 'Swipe finger to add or reduce dices', historyRows: { portrait: 5, landscape: 5 } }, statusLine: { priority: ['downloading', 'grabbing', 'selection', 'muted', 'ready', 'version'] as StatusMessageKey[] }, history: { verbs: { roll: 'Roll', reroll: 'Reroll', add: 'Add', delete: 'Remove', move: 'Move', clear: 'Clear' } as Record<string, string>, arrow: '→', pluralSuffix: 's', totalWord: 'Total', selectWord: 'Selected', someWord: 'some of', listSep: ', ', segmentSep: ' · ' } },
   vibration: { enabled: true, session: { enabled: true, burstMs: 20, intervalMs: 40, stopIntensity: 0.05 }, patterns: { roll: [40, 30, 40], select: 15, delete: 60, add: 20 }, thump: { enabled: true, frequency: 90, frequencyEnd: 55, duration: 70, gain: 0.35, click: true } },
 };

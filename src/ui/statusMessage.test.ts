@@ -2,9 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { pickStatusMessage } from './statusMessage';
 import type { StatusMessageKey } from '../config';
 
-const ALL: readonly StatusMessageKey[] = ['selection', 'muted', 'ready', 'downloading', 'version'];
+const ALL: readonly StatusMessageKey[] = ['grabbing', 'selection', 'muted', 'ready', 'downloading', 'version'];
 
-const none = { downloading: false, ready: false, muted: false, selection: false };
+const none = { downloading: false, ready: false, muted: false, selection: false, grabbing: false };
 
 describe('pickStatusMessage', () => {
   it('falls back to version when nothing else is active', () => {
@@ -19,29 +19,35 @@ describe('pickStatusMessage', () => {
   });
 
   it('prefers muted over ready and downloading when muted is on top', () => {
-    expect(pickStatusMessage(ALL, { downloading: true, ready: true, muted: true, selection: false })).toBe('muted');
+    expect(pickStatusMessage(ALL, { downloading: true, ready: true, muted: true, selection: false, grabbing: false })).toBe('muted');
+  });
+
+  it('prefers grabbing over every other message when placed first', () => {
+    expect(
+      pickStatusMessage(ALL, { downloading: true, ready: true, muted: true, selection: true, grabbing: true }),
+    ).toBe('grabbing');
   });
 
   it('prefers selection over every other message', () => {
     expect(
-      pickStatusMessage(ALL, { downloading: true, ready: true, muted: true, selection: true }),
+      pickStatusMessage(ALL, { downloading: true, ready: true, muted: true, selection: true, grabbing: false }),
     ).toBe('selection');
   });
 
   it('prefers downloading over every other message when placed first', () => {
-    const order: readonly StatusMessageKey[] = ['downloading', 'selection', 'muted', 'ready', 'version'];
+    const order: readonly StatusMessageKey[] = ['downloading', 'grabbing', 'selection', 'muted', 'ready', 'version'];
     expect(
-      pickStatusMessage(order, { downloading: true, ready: true, muted: true, selection: true }),
+      pickStatusMessage(order, { downloading: true, ready: true, muted: true, selection: true, grabbing: true }),
     ).toBe('downloading');
   });
 
   it('honours the configured order when it differs', () => {
     const order: readonly StatusMessageKey[] = ['ready', 'downloading', 'muted', 'version'];
-    expect(pickStatusMessage(order, { downloading: true, ready: false, muted: true, selection: false })).toBe(
+    expect(pickStatusMessage(order, { downloading: true, ready: false, muted: true, selection: false, grabbing: false })).toBe(
       'downloading',
     );
     expect(
-      pickStatusMessage(order, { downloading: true, ready: true, muted: true, selection: false }),
+      pickStatusMessage(order, { downloading: true, ready: true, muted: true, selection: false, grabbing: false }),
     ).toBe('ready');
   });
 

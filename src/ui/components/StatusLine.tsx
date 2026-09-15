@@ -48,7 +48,35 @@ function SelectionCountdownBar({ durationMs }: { durationMs: number }) {
   );
 }
 
-export function StatusLine() {
+function GrabProgressBar({ durationMs }: { durationMs: number }) {
+  const [pct, setPct] = useState(0);
+
+  useEffect(() => {
+    if (durationMs <= 0) return;
+    let rafId = 0;
+    const start = performance.now();
+    const tick = (now: number) => {
+      const elapsed = Math.min(1, (now - start) / durationMs);
+      setPct(elapsed * 100);
+      if (elapsed < 1) rafId = requestAnimationFrame(tick);
+    };
+    rafId = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafId);
+  }, [durationMs]);
+
+  return (
+    <span className="update-bar">
+      <span className="update-bar-fill" style={{ width: `${pct}%` }} />
+    </span>
+  );
+}
+
+interface StatusLineProps {
+  grabActive?: boolean;
+  grabDragging?: boolean;
+}
+
+export function StatusLine({ grabActive = false, grabDragging = false }: StatusLineProps = {}) {
   const [fps, setFps] = useState(0);
   const [memory, setMemory] = useState<number | null>(null);
   const { state } = useGame();
@@ -62,7 +90,8 @@ export function StatusLine() {
     downloading: status === 'downloading',
     ready: status === 'ready',
     muted: unlock === 'tap' && audioMuted,
-    selection: hasSelection,
+    grabbing: grabActive && !grabDragging,
+    selection: hasSelection && !grabActive,
   };
   const message = pickStatusMessage(config.ui.statusLine.priority, active);
 
@@ -100,6 +129,7 @@ export function StatusLine() {
           durationMs={config.renderer.shake.durationMs}
         />
       )}
+      {message === 'grabbing' && <GrabProgressBar durationMs={config.input.dragDelayMs} />}
       {message === 'muted' && <span>Tap the screen to enable sound.</span>}
       {message === 'version' && <span>{__APP_VERSION__}</span>}
       {message === 'downloading' && (
