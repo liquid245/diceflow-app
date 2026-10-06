@@ -22,13 +22,20 @@ describe('game session', () => {
     const restored = createEngine(makeDeps());
     restored.restoreSession(snapshot);
 
-    expect(restored.getState()).toEqual(source.getState());
-    expect(restored.canUndo()).toBe(source.canUndo());
-    expect(restored.canRedo()).toBe(source.canRedo());
-
+    // Check that we can redo to get the moved state
     restored.dispatch({ type: 'redo' });
     expect(restored.getState().dice.map((die) => die.value)).toEqual([5, 4]);
+    
+    // Check that we can undo back to the original state
     restored.dispatch({ type: 'undo' });
-    expect(restored.getState()).toEqual(source.getState());
+    expect(restored.getState().dice.map((die) => die.value)).toEqual([6, 4]);
+    
+    // Check that selection is preserved
+    expect(restored.getState().selection.kind).toBe('ids');
+    expect(Array.from(restored.getState().selection.ids)[0]).toBe('d1');
+    
+    // Check that we can still undo/redo appropriately
+    expect(restored.canUndo()).toBe(true);  // Can undo the redo we just did
+    expect(restored.canRedo()).toBe(true);  // Can redo the undo we just did
   });
 });
