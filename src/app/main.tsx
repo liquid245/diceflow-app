@@ -10,6 +10,13 @@ import { readSharedSession } from '../services/share';
 import { config } from '../config';
 import { AnalyticsService } from '../services/analytics';
 
+function detectPlatform(): string {
+  const ua = navigator.userAgent;
+  if (/iphone|ipad|ipod/i.test(ua)) return 'ios';
+  if (/android/i.test(ua)) return 'android';
+  return 'desktop';
+}
+
 document.documentElement.style.setProperty('--font-scale', String(config.ui.fontScale));
 
 initPersistence(engine, storage);
@@ -22,17 +29,29 @@ unlockAudio();
 // Initialize analytics if enabled
 if (config.analytics.enabled) {
   const analytics = new AnalyticsService(storage, config.analytics);
-  analytics.start();
-  
-  // Wrap engine.dispatch to track actions
+
+  // Wrap engine.dispatch to track actions. Select actions are excluded for privacy.
   const originalDispatch = engine.dispatch;
   engine.dispatch = (action) => {
-    // Track the action type (excluding select and selectGroups for privacy)
     if (action.type !== 'select' && action.type !== 'selectGroups') {
       analytics.trackEvent(`action_${action.type}`, {});
     }
     originalDispatch.call(engine, action);
   };
+
+  // Optional work starts after the first paint so it never blocks startup (ARCHITECTURE §32).
+  const startAnalytics = () => {
+    analytics.start();
+    analytics.trackEvent('launch', { version: __APP_VERSION__, platform: detectPlatform() });
+    analytics.trackEvent('session_start', { version: __APP_VERSION__ });
+  };
+  const idle = (window as Window & { requestIdleCallback?: (cb: () => void) => number })
+    .requestIdleCallback;
+  if (idle) {
+    idle(startAnalytics);
+  } else {
+    window.setTimeout(startAnalytics, 0);
+  }
 }
 
 createRoot(document.getElementById('root')!).render(
