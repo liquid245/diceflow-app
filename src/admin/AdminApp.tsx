@@ -3,6 +3,8 @@ import { config } from '../config';
 import { fetchStats, type StatsResponse } from './api';
 import { MapView } from './MapView';
 
+const REFRESH_MS = 15_000;
+
 function Card({ label, value }: { label: string; value: number }) {
   return (
     <div className="card">
@@ -56,7 +58,8 @@ export function AdminApp() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true);
     try {
       const stats = await fetchStats(config.analytics.statsEndpoint);
       setData(stats);
@@ -64,7 +67,7 @@ export function AdminApp() {
     } catch (err) {
       setError(err instanceof Error ? err.message : 'failed to load stats');
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }, []);
 
@@ -87,8 +90,14 @@ export function AdminApp() {
     };
   }, []);
 
+  useEffect(() => {
+    const id = window.setInterval(() => {
+      void load(true);
+    }, REFRESH_MS);
+    return () => window.clearInterval(id);
+  }, [load]);
+
   const refresh = useCallback(() => {
-    setLoading(true);
     void load();
   }, [load]);
 

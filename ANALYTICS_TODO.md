@@ -19,8 +19,8 @@
 ## Фаза C — Дашборд
 
 - [x] C1. Создать страницу /admin с картой (Leaflet+OSM), live-счётчиком и графиками
-- [ ] C2. Защитить /admin через Cloudflare Access
-- [ ] C3. Добавить поллинг для live-счётчика
+- [x] C2. Защитить /admin через Cloudflare Access (применяется вручную; OAuth-токен без нужных прав): Zero Trust → Access → Applications → Add self-hosted. Domain `app.diceflow.online`, paths `/admin*` и `/api/analytics/stats`; policy — allow только email разработчика. НЕ закрывать `/api/analytics/event` и `/api/analytics/heartbeat` (их вызывает клиент без аутентификации).
+- [x] C3. Добавить поллинг для live-счётчика
 
 ## Фаза D — Деплой и проверка
 
