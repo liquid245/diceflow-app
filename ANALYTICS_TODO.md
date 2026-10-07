@@ -24,5 +24,5 @@
 
 ## Фаза D — Деплой и проверка
 
-- [ ] D1. Обновить CI (deploy.yml) чтобы деплоить Functions вместе с Pages
+- [x] D1. Деплой Functions вместе с Pages — выбран вариант нативной git-интеграции Cloudflare Pages (без секретов в CI). Настройка в dashboard (вручную): Workers & Pages → `diceflow-app` → Settings → Build: Build command `VITE_BASE=/ npm run build`, Build output directory `dist`, подключить Git-репозиторий `liquid245/diceflow-app` / ветку `main`. Binding `ANALYTICS_DB` и `compatibility_date` берутся из `wrangler.toml` при сборке. GitHub Pages workflow остаётся для второго хостинга.
 - [ ] D2. E2E проверка: отправить событие с устройства и убедиться, что оно появляется в дашборде
