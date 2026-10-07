@@ -31,7 +31,7 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: 'prompt',
+      registerType: 'autoUpdate',
       injectRegister: false,
       includeAssets: ['icons/*.png', 'models/*.glb', 'sounds/*.wav'],
       manifest: {
@@ -84,6 +84,8 @@ export default defineConfig({
         ],
       },
       workbox: {
+        skipWaiting: true,
+        clientsClaim: true,
         navigateFallbackDenylist: [/\/admin(\.html)?$/],
         globIgnores: ['**/admin.html', '**/assets/admin-*.js', '**/assets/admin-*.css'],
       },

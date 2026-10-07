@@ -75,6 +75,18 @@ export function usePwaUpdate() {
         // SW unsupported or failed to register; keep idle
       });
 
+    // autoUpdate activates the new worker itself; reload once it takes control so the
+    // page picks up the new HTML/JS. Skip the very first install (no prior controller)
+    // to avoid an unnecessary reload on a cold visit.
+    let reloading = false;
+    const hadController = Boolean(navigator.serviceWorker.controller);
+    const controllerHandler = () => {
+      if (reloading || !hadController) return;
+      reloading = true;
+      window.location.reload();
+    };
+    navigator.serviceWorker.addEventListener('controllerchange', controllerHandler);
+
     const visibilityHandler = () => {
       if (document.visibilityState === 'visible') void check();
     };
@@ -86,6 +98,7 @@ export function usePwaUpdate() {
     return () => {
       disposed = true;
       stopAnimation();
+      navigator.serviceWorker.removeEventListener('controllerchange', controllerHandler);
       document.removeEventListener('visibilitychange', visibilityHandler);
       window.removeEventListener('online', onlineHandler);
       window.clearInterval(interval);
