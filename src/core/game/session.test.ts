@@ -30,9 +30,12 @@ describe('game session', () => {
     restored.dispatch({ type: 'undo' });
     expect(restored.getState().dice.map((die) => die.value)).toEqual([6, 4]);
     
-    // Check that selection is preserved
-    expect(restored.getState().selection.kind).toBe('ids');
-    expect(Array.from(restored.getState().selection.ids)[0]).toBe('d1');
+     // Check that selection is preserved
+     const selection = restored.getState().selection;
+     expect(selection.kind).toBe('ids');
+     if (selection.kind === 'ids') {
+       expect(Array.from(selection.ids)[0]).toBe('d1');
+     }
     
     // Check that we can still undo/redo appropriately
     expect(restored.canUndo()).toBe(true);  // Can undo the redo we just did
