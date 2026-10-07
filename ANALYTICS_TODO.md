@@ -12,7 +12,9 @@
 - [x] B1. Создать базу D1 и миграции (schema.sql) + wrangler.toml
 - [x] B2. Реализовать POST /api/analytics/event и POST /api/analytics/heartbeat (с гео из request.cf, валидация, запись в D1)
 - [x] B3. Реализовать GET /api/analytics/stats (агрегаты: active_now, DAU, установки/день, точки, платформы/версии)
-- [ ] B4. Настроить Pages Functions + D1 binding в wrangler.toml, добавить rate limiting
+- [x] B4. Настроить Pages Functions + D1 binding в wrangler.toml (binding готов в B1). Rate limiting — правило уровня зоны (применяется вручную, OAuth-токен имеет только `zone:read`):
+      Zone `app.diceflow.online` → Security → WAF → Rate limiting rules.
+      Name: `analytics-api`; Expression: `(http.request.uri.path contains "/api/analytics/")`; Rate: 60 req / 1 min; Counting: per IP; Action: Block, duration 1 min.
 
 ## Фаза C — Дашборд
 
