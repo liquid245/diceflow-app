@@ -5,3 +5,5 @@ certs/
 .codegraph/
 .DS_Store
 *.local
+.wrangler/
+.dev.vars
