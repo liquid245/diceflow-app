@@ -18,5 +18,5 @@ export const config = {
   buttons,
   ui: { fontScale: 1, panels: { borders: false }, infoPanel: { centered: true, swipeHint: 'Swipe finger to add or reduce dices', historyRows: { portrait: 5, landscape: 5 } }, statusLine: { priority: ['downloading', 'grabbing', 'selection', 'muted', 'ready', 'version'] as StatusMessageKey[] }, history: { verbs: { roll: 'Roll', reroll: 'Reroll', add: 'Add', delete: 'Remove', move: 'Move', clear: 'Clear' } as Record<string, string>, arrow: '→', pluralSuffix: 's', totalWord: 'Total', selectWord: 'Selected', someWord: 'some of', listSep: ', ', segmentSep: ' · ' } },
   vibration: { enabled: true, session: { enabled: true, burstMs: 20, intervalMs: 40, stopIntensity: 0.05 }, patterns: { roll: [40, 30, 40], select: 15, delete: 60, add: 20 }, thump: { enabled: true, frequency: 90, frequencyEnd: 55, duration: 70, gain: 0.35, click: true } },
-  analytics: { enabled: true, endpoint: '/api/analytics/event', heartbeatEndpoint: '/api/analytics/heartbeat', batchSize: 10, flushIntervalMs: 30_000, heartbeatIntervalMs: 60_000 },
+  analytics: { enabled: true, endpoint: '/api/analytics/event', heartbeatEndpoint: '/api/analytics/heartbeat', statsEndpoint: '/api/analytics/stats', batchSize: 10, flushIntervalMs: 30_000, heartbeatIntervalMs: 60_000 },
 };

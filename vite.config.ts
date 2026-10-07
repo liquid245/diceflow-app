@@ -21,6 +21,12 @@ export default defineConfig({
   build: {
     target: 'safari15',
     cssTarget: 'safari15',
+    rolldownOptions: {
+      input: {
+        main: fileURLToPath(new URL('./index.html', import.meta.url)),
+        admin: fileURLToPath(new URL('./admin.html', import.meta.url)),
+      },
+    },
   },
   plugins: [
     react(),
@@ -76,6 +82,10 @@ export default defineConfig({
             purpose: 'maskable dark',
           },
         ],
+      },
+      workbox: {
+        navigateFallbackDenylist: [/\/admin(\.html)?$/],
+        globIgnores: ['**/admin.html', '**/assets/admin-*.js', '**/assets/admin-*.css'],
       },
     }),
   ],
