@@ -86,7 +86,7 @@ export default defineConfig({
       workbox: {
         skipWaiting: true,
         clientsClaim: true,
-        navigateFallbackDenylist: [/\/admin(\.html)?$/],
+        navigateFallbackDenylist: [/^\/admin/],
         globIgnores: ['**/admin.html', '**/assets/admin-*.js', '**/assets/admin-*.css'],
       },
     }),
