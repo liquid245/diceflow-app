@@ -1,6 +1,8 @@
 const DB_NAME = 'diceflow';
 const DB_VERSION = 1;
 export const KV_STORE = 'kv';
+export const INSTALLATION_ID_KEY = 'installationId';
+export const SESSION_ID_KEY = 'sessionId';
 
 export function openDb(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
