@@ -3,9 +3,15 @@ import type { AnalyticsStorage } from '../storage/storage';
 export interface AnalyticsConfig {
   enabled: boolean;
   endpoint: string;
+  heartbeatEndpoint: string;
   batchSize: number;
   flushIntervalMs: number;
   heartbeatIntervalMs: number;
+}
+
+export interface AnalyticsMeta {
+  version: string;
+  platform: string;
 }
 
 export interface AnalyticsEvent {
@@ -20,18 +26,26 @@ export class AnalyticsService {
   private flushInterval: number | null = null;
   private heartbeatInterval: number | null = null;
   private readonly endpoint: string;
+  private readonly heartbeatEndpoint: string;
   private readonly batchSize: number;
   private readonly flushIntervalMs: number;
   private readonly heartbeatIntervalMs: number;
+  private readonly meta: AnalyticsMeta;
   private installationId: string | null = null;
   private sessionId: string | null = null;
 
-  constructor(storage: AnalyticsStorage, config: AnalyticsConfig) {
+  constructor(
+    storage: AnalyticsStorage,
+    config: AnalyticsConfig,
+    meta: AnalyticsMeta = { version: 'unknown', platform: 'unknown' },
+  ) {
     this.storage = storage;
     this.endpoint = config.endpoint;
+    this.heartbeatEndpoint = config.heartbeatEndpoint;
     this.batchSize = config.batchSize;
     this.flushIntervalMs = config.flushIntervalMs;
     this.heartbeatIntervalMs = config.heartbeatIntervalMs;
+    this.meta = meta;
   }
 
   private async getOrCreateInstallationId(): Promise<string> {
@@ -86,6 +100,8 @@ export class AnalyticsService {
       const payload = {
         installationId,
         sessionId,
+        version: this.meta.version,
+        platform: this.meta.platform,
         events: events.map(e => ({
           type: e.type,
           properties: e.properties,
@@ -106,10 +122,30 @@ export class AnalyticsService {
     }
   }
 
+  private async sendHeartbeat(): Promise<void> {
+    if (document.hidden) return;
+    try {
+      const installationId = await this.getOrCreateInstallationId();
+      const sessionId = await this.getOrCreateSessionId();
+      const payload = {
+        installationId,
+        sessionId,
+        version: this.meta.version,
+        platform: this.meta.platform,
+        timestamp: Date.now(),
+      };
+      navigator.sendBeacon(this.heartbeatEndpoint, JSON.stringify(payload));
+    } catch (error) {
+      console.error('Error sending analytics heartbeat:', error);
+    }
+  }
+
   private startHeartbeat(): void {
     if (this.heartbeatInterval !== null) return;
+    // Report activity immediately so active-now is accurate on launch/resume.
+    void this.sendHeartbeat();
     this.heartbeatInterval = window.setInterval(() => {
-      this.trackEvent('heartbeat', {});
+      void this.sendHeartbeat();
     }, this.heartbeatIntervalMs);
   }
 

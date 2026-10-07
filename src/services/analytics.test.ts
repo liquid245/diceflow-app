@@ -24,6 +24,7 @@ function createStorage(initial: Record<string, string> = {}): TestStorage {
 const baseConfig: AnalyticsConfig = {
   enabled: true,
   endpoint: '/api/analytics/event',
+  heartbeatEndpoint: '/api/analytics/heartbeat',
   batchSize: 100,
   flushIntervalMs: 1_000_000,
   heartbeatIntervalMs: 1_000_000,
@@ -135,6 +136,21 @@ describe('AnalyticsService', () => {
     expect(sent).toHaveLength(2);
     const payload = JSON.parse(sent[1].data);
     expect(payload.events).toHaveLength(1);
+  });
+
+  it('sends heartbeats to the dedicated endpoint', async () => {
+    const analytics = new AnalyticsService(createStorage(), baseConfig);
+
+    analytics.start();
+    await vi.waitFor(() => {
+      expect(sent.some((entry) => entry.url === baseConfig.heartbeatEndpoint)).toBe(true);
+    });
+    analytics.stop();
+
+    const heartbeat = sent.find((entry) => entry.url === baseConfig.heartbeatEndpoint);
+    const payload = JSON.parse(heartbeat!.data);
+    expect(payload.installationId).toBeTruthy();
+    expect(payload.sessionId).toBeTruthy();
   });
 
   it('starts and stops timers', () => {

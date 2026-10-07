@@ -8,11 +8,11 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "tsc --noEmit && vite build",
+    "build": "tsc --noEmit && tsc -p functions/tsconfig.json --noEmit && vite build",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && tsc -p functions/tsconfig.json --noEmit",
     "lint": "eslint ."
   },
   "dependencies": {
@@ -21,6 +21,7 @@
     "three": "^0.162.0"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^5.20261007.1",
     "@eslint/js": "^10.0.1",
     "@types/node": "^26.2.0",
     "@types/react": "^19.2.18",

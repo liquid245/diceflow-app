@@ -28,7 +28,10 @@ unlockAudio();
 
 // Initialize analytics if enabled
 if (config.analytics.enabled) {
-  const analytics = new AnalyticsService(storage, config.analytics);
+  const analytics = new AnalyticsService(storage, config.analytics, {
+    version: __APP_VERSION__,
+    platform: detectPlatform(),
+  });
 
   // Wrap engine.dispatch to track actions. Select actions are excluded for privacy.
   const originalDispatch = engine.dispatch;
@@ -42,8 +45,8 @@ if (config.analytics.enabled) {
   // Optional work starts after the first paint so it never blocks startup (ARCHITECTURE §32).
   const startAnalytics = () => {
     analytics.start();
-    analytics.trackEvent('launch', { version: __APP_VERSION__, platform: detectPlatform() });
-    analytics.trackEvent('session_start', { version: __APP_VERSION__ });
+    analytics.trackEvent('launch');
+    analytics.trackEvent('session_start');
   };
   const idle = (window as Window & { requestIdleCallback?: (cb: () => void) => number })
     .requestIdleCallback;

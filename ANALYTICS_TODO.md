@@ -10,7 +10,7 @@
 ## Фаза B — Сервер
 
 - [x] B1. Создать базу D1 и миграции (schema.sql) + wrangler.toml
-- [ ] B2. Реализовать POST /api/analytics/event и POST /api/analytics/heartbeat (с гео из request.cf, валидация, запись в D1)
+- [x] B2. Реализовать POST /api/analytics/event и POST /api/analytics/heartbeat (с гео из request.cf, валидация, запись в D1)
 - [ ] B3. Реализовать GET /api/analytics/stats (агрегаты: active_now, DAU, установки/день, точки, платформы/версии)
 - [ ] B4. Настроить Pages Functions + D1 binding в wrangler.toml, добавить rate limiting
 

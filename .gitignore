@@ -7,3 +7,4 @@ certs/
 *.local
 .wrangler/
 .dev.vars
+worker-configuration.d.ts
