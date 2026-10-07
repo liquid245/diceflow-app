@@ -25,4 +25,4 @@
 ## Фаза D — Деплой и проверка
 
 - [x] D1. Деплой Functions вместе с Pages — выбран вариант нативной git-интеграции Cloudflare Pages (без секретов в CI). Git-интеграция к `liquid245/diceflow-app` (ветка `main`) уже настроена, prod-деплой проходит; binding `ANALYTICS_DB` (`de97c6de-…`) и `compatibility_date` заданы в prod-окружении проекта. Build command исправлен на `VITE_BASE=/ npm run build` (было `npm run build` — из-за дефолтного base `/dice_flow/` ассеты на корне `diceflow-app.pages.dev` ломались). Destination — `dist`. GitHub Pages workflow остаётся для второго хостинга.
-- [ ] D2. E2E проверка: отправить событие с устройства и убедиться, что оно появляется в дашборде
+- [ ] D2. E2E проверка: отправить событие с устройства и убедиться, что оно появляется в дашборде. Блокеры: (1) песочница агента режет TLS к `*.pages.dev`; (2) кастомный домен `app.diceflow.online` не резолвится — зона `diceflow.online` в аккаунте имеет статус `moved` (домен ушёл на другие NS). Для ручной проверки — `https://diceflow-app.pages.dev/admin` отправить событие → обновить дашборд.
